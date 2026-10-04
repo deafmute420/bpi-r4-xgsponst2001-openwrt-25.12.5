@@ -46,27 +46,27 @@ eventually disables the interface.
 With the quirk applied, the module initializes normally.
 
 ## Investigation Timeline
- 
-Observed:
+
+**Observed:**
 - Interface repeatedly entered TX_FAULT state
- 
-Hypothesis:
+
+**Hypothesis:**
 - Hardware failure
- 
-Testing:
+
+**Testing:**
 - Verified EEPROM values
 - Compared logs with upstream reports
- 
-Discovery:
+
+**Discovery:**
 - Found upstream Linux commits
- 
-Resolution:
+
+**Resolution:**
 - Backported fixes
 - Rebuilt sfp.ko
 - Loaded patched module
- 
-Outcome:
-- Stable link at 10Gbps
+
+**Outcome:**
+- Stable link at 10Gbps   
 
 ## Hardware tested
 
