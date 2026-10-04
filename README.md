@@ -3,6 +3,21 @@
 This repository provides a patched Linux SFP kernel module for
 OpenWrt 25.12.5 on the Banana Pi BPI-R4.
 
+# Project Overview
+ 
+This project was created while preparing a Banana Pi BPI-R4
+for AT&T Fiber service using an OEM XGSPONST2001 XGS-PON
+SFP+ module.
+ 
+The stock OpenWrt 25.12.5 kernel repeatedly disabled the
+SFP interface due to TX_FAULT events. Investigation showed
+that the required Linux driver quirks existed upstream but
+had not yet been incorporated into the OpenWrt release.
+ 
+To resolve the issue, I backported the upstream Linux
+patches, rebuilt the sfp.ko kernel module, and validated
+stable 10Gbps operation.
+
 ## Problem
 
 The OEM XGSPONST2001 XGS-PON SFP module causes the stock OpenWrt
@@ -15,6 +30,43 @@ The OEM XGSPONST2001 XGS-PON SFP module causes the stock OpenWrt
     sfp sfp1: module persistently indicates fault, disabling
 
 The result is that `sfp-wan` is disabled by the SFP state machine.
+
+## Root Cause
+ 
+The XGSPONST2001 reports TX_FAULT and LOS conditions
+that do not accurately represent link health.
+ 
+The upstream Linux quirk associates this module with
+sfp_fixup_potron() which suppresses the incorrect fault
+behavior and applies extended startup handling.
+ 
+Without this quirk, the OpenWrt SFP state machine
+eventually disables the interface.
+ 
+With the quirk applied, the module initializes normally.
+
+## Investigation Timeline
+ 
+Observed:
+- Interface repeatedly entered TX_FAULT state
+ 
+Hypothesis:
+- Hardware failure
+ 
+Testing:
+- Verified EEPROM values
+- Compared logs with upstream reports
+ 
+Discovery:
+- Found upstream Linux commits
+ 
+Resolution:
+- Backported fixes
+- Rebuilt sfp.ko
+- Loaded patched module
+ 
+Outcome:
+- Stable link at 10Gbps
 
 ## Hardware tested
 
@@ -81,6 +133,13 @@ Back up the existing module:
 Replace it with the patched module and reboot.
 
 The original module can be restored from the backup if necessary.
+
+## Lessons Learned
+ 
+- Upstream Linux may contain fixes not yet available in OpenWrt.
+- SFP modules can require vendor-specific quirks.
+- Kernel module compatibility is tied to exact kernel versions.
+- Verifying upstream patches can save significant troubleshooting time.
 
 ## Important
 
